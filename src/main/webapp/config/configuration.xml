@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.springframework.org/schema/beans 
+http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/data/jpa
+http://www.springframework.org/schema/data/jpa/spring-jpa.xsd
+http://www.springframework.org/schema/tx 
+http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+http://www.springframework.org/schema/task
+http://www.springframework.org/schema/task/spring-task-4.3.xsd"
+xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+xmlns:tx="http://www.springframework.org/schema/tx"
+xmlns:context="http://www.springframework.org/schema/context"
+xmlns:aop="http://www.springframework.org/schema/aop"
+xmlns:task="http://www.springframework.org/schema/task"
+default-autowire="byType"
+>
+
+<!--<import resource="classpath:externalConfiguraion.xml"/> -->
+
+<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+    <property name="locations">
+		<list>
+			<value>/properties/db.properties</value>
+		</list>
+	</property>
+</bean>
+
+<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+<property name="driverClassName" value="${db.driver}"/>
+<property name="url" value="${db.url}"/>
+<property name="username" value="${db.username}"/>
+<property name="password" value="${db.password}"/>
+</bean> <!-- datasource 추가, EntityManagerFactory 의 인자 2번 -->
+
+<bean id="jpaVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"/>
+<!--EntityManagerFactory 의 인자 2번-->
+
+<bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="jpaVendorAdapter" ref="jpaVendorAdapter"/>
+</bean>  <!--EntityManagerFactory 를 빈 등록-->
+
+<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+<property name="entityManagerFactory" ref="entityManagerFactory"/>
+</bean> <!--EntityManager 를 빈 등록 -->
+
+<bean id="customQuery" class="com.kindlesstory.www.data.jpa.dao.custom.CustomQuery"/>
+
+<jpa:repositories base-package="com.kindlesstory.www.data.jpa.dao"/> <!-- JPARepository인터페이스를 가져옴 -->
+
+<tx:annotation-driven transaction-manager="transactionManager" /> <!--jpa에 대한 트랜젝션 사용-->
+
+<task:annotation-driven/> <!-- 스케줄러 설정. 멀티 스레드가 필요한 작업이 아니므로 driven만 생성. -->
+<!-- 이하 MVC 외적으로 사용하는 싱글톤들을 모음 -->
+
+</beans>
